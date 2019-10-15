@@ -58,6 +58,12 @@ public class Town
         }
     }
     
+    public void racePopChange(int growth, racePop raceToChange)
+    {
+        raceToChange.Pop += growth;
+        getTotalPop();
+    }
+
     public void upkeepStep()
     {
         Gold += GoldIn - GoldUp;

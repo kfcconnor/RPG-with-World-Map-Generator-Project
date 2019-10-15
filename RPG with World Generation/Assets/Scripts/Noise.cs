@@ -71,16 +71,12 @@ public static class Noise
 
 public static float[,] GenerateUniformNoiseMap(int size, float centerVertexZ, float maxDistanceZ, float offsetZ)
     {
-        // create an empty noise map with the mapDepth and mapWidth coordinates
         float[,] noiseMap = new float[size, size];
 
         for (int zIndex = 0; zIndex < size; zIndex++)
         {
-            // calculate the sampleZ by summing the index and the offset
             float sampleZ = zIndex + offsetZ;
-            // calculate the noise proportional to the distance of the sample to the center of the level
             float noise = Mathf.Abs(sampleZ - centerVertexZ) / maxDistanceZ;
-            // apply the noise for all points with this Z coordinate
             for (int xIndex = 0; xIndex < size; xIndex++)
             {
                 noiseMap[size - zIndex - 1, xIndex] = noise;

@@ -55,12 +55,13 @@ public class WorldMapManager : MonoBehaviour
         {
             worldMap.mapTiles[townX, townY].townDetails.isCaptial = true;
             Debug[TownNumber].isCaptial = true;
-            int startFarms = Mathf.RoundToInt(worldMap.mapTiles[townX, townY].Food / 10);
-            int startLumberjacks = Mathf.RoundToInt(worldMap.mapTiles[townX, townY].Wood / 10);
-            int startQuarries = Mathf.RoundToInt(worldMap.mapTiles[townX, townY].Stone / 10);
-            int startMines = Mathf.RoundToInt(worldMap.mapTiles[townX, townY].Ore / 10);
+            int startFarms = Mathf.RoundToInt(worldMap.mapTiles[townX, townY].Food / 2);
+            int startLumberjacks = Mathf.RoundToInt(worldMap.mapTiles[townX, townY].Wood / 2);
+            int startQuarries = Mathf.RoundToInt(worldMap.mapTiles[townX, townY].Stone / 2);
+            int startMines = Mathf.RoundToInt(worldMap.mapTiles[townX, townY].Ore / 2);
             buildingsToAdd.Add(searchForBuilding("Town Hall"));
-            for(int i = 0; i < startFarms; i++)
+            buildingsToAdd.Add(searchForBuilding("Market"));
+            for (int i = 0; i < startFarms; i++)
             {
                 buildingsToAdd.Add(searchForBuilding("Farm"));
             }

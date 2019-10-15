@@ -186,9 +186,9 @@ public class MapGenerator : MonoBehaviour
                                     worldMapMan.worldMap.mapTiles[x, y].coord.y = y;
                                     worldMapMan.worldMap.mapTiles[x, y].Biome = seaTerrains[i].name;
                                     worldMapMan.worldMap.mapTiles[x, y].tile = seaTerrains[i].tile;
-                                    worldMapMan.worldMap.mapTiles[x, y].Food = resources.Next(0, 100) * seaTerrains[i].FoodMod;
-                                    worldMapMan.worldMap.mapTiles[x, y].Stone = resources.Next(0, 100) * seaTerrains[i].StoneMod;
-                                    worldMapMan.worldMap.mapTiles[x, y].Wood = resources.Next(0, 100) * seaTerrains[i].WoodMod;
+                                    worldMapMan.worldMap.mapTiles[x, y].Food = resources.Next(0, 10) + seaTerrains[i].FoodMod;
+                                    worldMapMan.worldMap.mapTiles[x, y].Stone = resources.Next(0, 10) + seaTerrains[i].StoneMod;
+                                    worldMapMan.worldMap.mapTiles[x, y].Wood = resources.Next(0, 10) + seaTerrains[i].WoodMod;
                                     worldMapMan.worldMap.mapTiles[x, y].Ore = 0;
                                     worldMapMan.worldMap.mapTiles[x, y].BiomeType = 0;
                                     //worldMapMan.worldMap.Debug[y * size + x] = worldMapMan.worldMap.mapTiles[x, y];
@@ -209,10 +209,10 @@ public class MapGenerator : MonoBehaviour
                                     worldMapMan.worldMap.mapTiles[x, y].coord.y = y;
                                     worldMapMan.worldMap.mapTiles[x, y].Biome = mountTerrains[i].name;
                                     worldMapMan.worldMap.mapTiles[x, y].tile = mountTerrains[i].tile;
-                                    worldMapMan.worldMap.mapTiles[x, y].Food = resources.Next(0, 10);
-                                    worldMapMan.worldMap.mapTiles[x, y].Stone = resources.Next(0, 10);
-                                    worldMapMan.worldMap.mapTiles[x, y].Wood = resources.Next(0, 10);
-                                    worldMapMan.worldMap.mapTiles[x, y].Ore = resources.Next(0, 10);
+                                    worldMapMan.worldMap.mapTiles[x, y].Food = resources.Next(0, 10) + mountTerrains[i].FoodMod;
+                                    worldMapMan.worldMap.mapTiles[x, y].Stone = resources.Next(0, 10) + mountTerrains[i].StoneMod;
+                                    worldMapMan.worldMap.mapTiles[x, y].Wood = resources.Next(0, 10) + mountTerrains[i].WoodMod;
+                                    worldMapMan.worldMap.mapTiles[x, y].Ore = resources.Next(0, 10) + mountTerrains[i].OreMod;
                                     worldMapMan.worldMap.mapTiles[x, y].BiomeType = 1;
                                     System.Random oreChance = new System.Random();
                                     foreach (ore o in metalMan.OreList)
@@ -263,9 +263,9 @@ public class MapGenerator : MonoBehaviour
                                         worldMapMan.worldMap.mapTiles[x, y].Biome = biomeRows[0].biomes[Heat].name;
                                         worldMapMan.worldMap.mapTiles[x, y].biomeData = biomeRows[0].biomes[Heat];
                                         worldMapMan.worldMap.mapTiles[x, y].tile = biomeRows[0].biomes[Heat].tileC;
-                                        worldMapMan.worldMap.mapTiles[x, y].Food = resources.Next(0, 10);
-                                        worldMapMan.worldMap.mapTiles[x, y].Stone = resources.Next(0, 10);
-                                        worldMapMan.worldMap.mapTiles[x, y].Wood = resources.Next(0, 10);
+                                        worldMapMan.worldMap.mapTiles[x, y].Food = resources.Next(0, 10) + biomeRows[0].biomes[Heat].FoodMod;
+                                        worldMapMan.worldMap.mapTiles[x, y].Stone = resources.Next(0, 10) + biomeRows[0].biomes[Heat].StoneMod;
+                                        worldMapMan.worldMap.mapTiles[x, y].Wood = resources.Next(0, 10) + biomeRows[0].biomes[Heat].WoodMod;
                                         worldMapMan.worldMap.mapTiles[x, y].Ore = 0;
                                         //worldMapMan.worldMap.Debug[y * size + x] = worldMapMan.worldMap.mapTiles[x, y];
                                         //worldMap.SetTile(location, biomeRows[0].biomes[Heat].tile);
@@ -283,9 +283,9 @@ public class MapGenerator : MonoBehaviour
                                         worldMapMan.worldMap.mapTiles[x, y].Biome = biomeRows[1].biomes[Heat].name;
                                         worldMapMan.worldMap.mapTiles[x, y].biomeData = biomeRows[0].biomes[Heat];
                                         worldMapMan.worldMap.mapTiles[x, y].tile = biomeRows[1].biomes[Heat].tileC;
-                                        worldMapMan.worldMap.mapTiles[x, y].Food = resources.Next(0, 10);
-                                        worldMapMan.worldMap.mapTiles[x, y].Stone = resources.Next(0, 10);
-                                        worldMapMan.worldMap.mapTiles[x, y].Wood = resources.Next(0, 10);
+                                        worldMapMan.worldMap.mapTiles[x, y].Food = resources.Next(0, 10) + biomeRows[1].biomes[Heat].FoodMod;
+                                        worldMapMan.worldMap.mapTiles[x, y].Stone = resources.Next(0, 10) + biomeRows[1].biomes[Heat].StoneMod;
+                                        worldMapMan.worldMap.mapTiles[x, y].Wood = resources.Next(0, 10) + biomeRows[1].biomes[Heat].WoodMod;
                                         worldMapMan.worldMap.mapTiles[x, y].Ore = 0;
                                         //worldMapMan.worldMap.Debug[y * size + x] = worldMapMan.worldMap.mapTiles[x, y];
                                         //worldMap.SetTile(location, biomeRows[1].biomes[Heat].tile);
@@ -303,9 +303,9 @@ public class MapGenerator : MonoBehaviour
                                         worldMapMan.worldMap.mapTiles[x, y].Biome = biomeRows[2].biomes[Heat].name;
                                         worldMapMan.worldMap.mapTiles[x, y].biomeData = biomeRows[0].biomes[Heat];
                                         worldMapMan.worldMap.mapTiles[x, y].tile = biomeRows[2].biomes[Heat].tileC;
-                                        worldMapMan.worldMap.mapTiles[x, y].Food = resources.Next(0, 10);
-                                        worldMapMan.worldMap.mapTiles[x, y].Stone = resources.Next(0, 10);
-                                        worldMapMan.worldMap.mapTiles[x, y].Wood = resources.Next(0, 10);
+                                        worldMapMan.worldMap.mapTiles[x, y].Food = resources.Next(0, 10) + biomeRows[2].biomes[Heat].FoodMod;
+                                        worldMapMan.worldMap.mapTiles[x, y].Stone = resources.Next(0, 10) + biomeRows[2].biomes[Heat].StoneMod;
+                                        worldMapMan.worldMap.mapTiles[x, y].Wood = resources.Next(0, 10) + biomeRows[2].biomes[Heat].WoodMod;
                                         worldMapMan.worldMap.mapTiles[x, y].Ore = 0;
                                         //worldMapMan.worldMap.Debug[y * size + x] = worldMapMan.worldMap.mapTiles[x, y];
                                         //worldMap.SetTile(location, biomeRows[2].biomes[Heat].tile);
@@ -323,9 +323,9 @@ public class MapGenerator : MonoBehaviour
                                         worldMapMan.worldMap.mapTiles[x, y].Biome = biomeRows[3].biomes[Heat].name;
                                         worldMapMan.worldMap.mapTiles[x, y].biomeData = biomeRows[0].biomes[Heat];
                                         worldMapMan.worldMap.mapTiles[x, y].tile = biomeRows[3].biomes[Heat].tileC;
-                                        worldMapMan.worldMap.mapTiles[x, y].Food = resources.Next(0, 10);
-                                        worldMapMan.worldMap.mapTiles[x, y].Stone = resources.Next(0, 10);
-                                        worldMapMan.worldMap.mapTiles[x, y].Wood = resources.Next(0, 10);
+                                        worldMapMan.worldMap.mapTiles[x, y].Food = resources.Next(0, 10) + biomeRows[3].biomes[Heat].FoodMod;
+                                        worldMapMan.worldMap.mapTiles[x, y].Stone = resources.Next(0, 10) + biomeRows[3].biomes[Heat].StoneMod;
+                                        worldMapMan.worldMap.mapTiles[x, y].Wood = resources.Next(0, 10) + biomeRows[3].biomes[Heat].WoodMod;
                                         worldMapMan.worldMap.mapTiles[x, y].Ore = 0;
                                         //worldMapMan.worldMap.Debug[y * size + x] = worldMapMan.worldMap.mapTiles[x, y];
                                         //worldMap.SetTile(location, biomeRows[3].biomes[Heat].tile);
@@ -491,15 +491,15 @@ public struct SeaTerrains
     public float height;
     public Color colour;
     public Tile tile;
-    [Range(0, 1)]
-    public float FoodMod;
-    [Range(0, 1)]
-    public float TradeMod;
-    [Range(0, 1)]
-    public float StoneMod;
-    [Range(0, 1)]
-    public float WoodMod;
-    [Range(0, 1)]
+    [Range(0, 5)]
+    public int FoodMod;
+    [Range(0, 5)]
+    public int TradeMod;
+    [Range(0, 5)]
+    public int StoneMod;
+    [Range(0, 5)]
+    public int WoodMod;
+    [Range(0, 5)]
     public float OreMod;
 }
 
@@ -510,16 +510,16 @@ public struct MountTerrains
     public float height;
     public Color colour;
     public Tile tile;
-    [Range(0, 1)]
-    public float FoodMod;
-    [Range(0, 1)]
-    public float TradeMod;
-    [Range(0, 1)]
-    public float StoneMod;
-    [Range(0, 1)]
-    public float WoodMod;
-    [Range(0, 1)]
-    public float OreMod;
+    [Range(0, 5)]
+    public int FoodMod;
+    [Range(0, 5)]
+    public int TradeMod;
+    [Range(0, 5)]
+    public int StoneMod;
+    [Range(0, 5)]
+    public int WoodMod;
+    [Range(0, 5)]
+    public int OreMod;
 }
 
 [System.Serializable]
@@ -558,16 +558,16 @@ public struct Biome
     public Tile tileSW;
     public Tile tileSWIn;
     public bool forest;
-    [Range(0, 1)]
-    public float FoodMod;
-    [Range(0, 1)]
-    public float TradeMod;
-    [Range(0, 1)]
-    public float StoneMod;
-    [Range(0, 1)]
-    public float WoodMod;
-    [Range(0, 1)]
-    public float OreMod;
+    [Range(0, 5)]
+    public int FoodMod;
+    [Range(0, 5)]
+    public int TradeMod;
+    [Range(0, 5)]
+    public int StoneMod;
+    [Range(0, 5)]
+    public int WoodMod;
+    [Range(0, 5)]
+    public int OreMod;
 }
 
 [System.Serializable]
