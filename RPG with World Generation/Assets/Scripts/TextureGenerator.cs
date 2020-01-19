@@ -20,7 +20,7 @@ public static class TextureGenerator
     {
         int size = heightMap.GetLength(0);
 
-        
+
 
         Color[] colourMap = new Color[size * size];
         for (int y = 0; y < size; y++)
@@ -34,16 +34,17 @@ public static class TextureGenerator
         return TextureFromColourMap(colourMap, size);
 
     }
-    public static void coastGeneration(WorldMap world, int locX, int locY, int size, Tile waterCoast, Tilemap waterMap)
+    public static void coastGeneration(WorldMap world, int locX, int locY, int size, Tile waterCoast, Tilemap waterMap, tileGroup[] tilegroups, Dictionary<int, Biome> biomeList, Tilemap worldMap)
     {
         NearTile near = new NearTile();
         int i = 0;
         List<string> waterLocs = new List<string>();
         bool[] isWater = new bool[8];
+        int tileGroup = getTilegroup(world.mapTiles[locX, locY],biomeList,tilegroups);
 
-        for(int y = 1; y >=-1; y--)
+        for (int y = 1; y >= -1; y--)
         {
-            for (int x = 1; x >=-1; x--)
+            for (int x = 1; x >= -1; x--)
             {
                 if (!(x == 0 && y == 0))
                 {
@@ -151,12 +152,12 @@ public static class TextureGenerator
                     }
                     i++;
                 }
-                
+
             }
         }
 
 
-        for( i = 0; i < 8; i++)
+        for (i = 0; i < 8; i++)
         {
             switch (i)
             {
@@ -322,96 +323,112 @@ public static class TextureGenerator
                     }
             }
         }
-
+        Vector3Int loc = new Vector3Int(locX, locY, 0);
         if (waterLocs.Count == 0 || waterLocs.Count == 8)
         {
-            world.mapTiles[locX, locY].tile = world.mapTiles[locX, locY].biomeData.tileC;
+            worldMap.SetTile(loc, tilegroups[tileGroup].tileC);
         }
         else
         {
-            Vector3Int location = new Vector3Int(locX, locY, 0);
-            waterMap.SetTile(location, waterCoast);
-            if (isWater[0] && isWater[1] && isWater[2]|| isWater[1] || isWater[1] && isWater[2] || isWater[1] && isWater[0])
+            
+            waterMap.SetTile(loc, waterCoast);
+            if (isWater[0] && isWater[1] && isWater[2] || isWater[1] || isWater[1] && isWater[2] || isWater[1] && isWater[0])
             {
-                world.mapTiles[locX, locY].tile = world.mapTiles[locX, locY].biomeData.tileN;
+                worldMap.SetTile(loc, tilegroups[tileGroup].tileN);
             }
             else if (isWater[5] && isWater[6] && isWater[7] || isWater[6] || isWater[6] && isWater[5] || isWater[6] && isWater[7])
             {
-                world.mapTiles[locX, locY].tile = world.mapTiles[locX, locY].biomeData.tileS;
+                worldMap.SetTile(loc,tilegroups[tileGroup].tileS);
             }
             else if (isWater[0] && isWater[3] && isWater[5] || isWater[3] || isWater[3] && isWater[0] || isWater[3] && isWater[5])
             {
-                world.mapTiles[locX, locY].tile = world.mapTiles[locX, locY].biomeData.tileE;
+                worldMap.SetTile(loc, tilegroups[tileGroup].tileE);
             }
             else if (isWater[2] && isWater[4] && isWater[7] || isWater[4] || isWater[4] && isWater[2] || isWater[4] && isWater[7])
             {
-                world.mapTiles[locX, locY].tile = world.mapTiles[locX, locY].biomeData.tileW;
+                worldMap.SetTile(loc, tilegroups[tileGroup].tileW);
             }
 
             if (isWater[0] && isWater[1] && isWater[3])
             {
-                world.mapTiles[locX, locY].tile = world.mapTiles[locX, locY].biomeData.tileNE;
+                worldMap.SetTile(loc, tilegroups[tileGroup].tileNE);
             }
             else if (isWater[0] && waterLocs.Count == 1)
             {
-                world.mapTiles[locX, locY].tile = world.mapTiles[locX, locY].biomeData.tileNEIn;
+                worldMap.SetTile(loc, tilegroups[tileGroup].tileNEIn);
             }
             else if (isWater[4] && isWater[1] && isWater[2])
             {
-                world.mapTiles[locX, locY].tile = world.mapTiles[locX, locY].biomeData.tileNW;
+                worldMap.SetTile(loc, tilegroups[tileGroup].tileNW);
             }
             else if (isWater[2] && waterLocs.Count == 1)
             {
-                world.mapTiles[locX, locY].tile = world.mapTiles[locX, locY].biomeData.tileNWIn;
+                worldMap.SetTile(loc, tilegroups[tileGroup].tileNWIn);
             }
             else if (isWater[3] && isWater[5] && isWater[6])
             {
-                world.mapTiles[locX, locY].tile = world.mapTiles[locX, locY].biomeData.tileSE;
+                worldMap.SetTile(loc, tilegroups[tileGroup].tileSE);
             }
             else if (isWater[5] && waterLocs.Count == 1)
             {
-                world.mapTiles[locX, locY].tile = world.mapTiles[locX, locY].biomeData.tileSEIn;
+                worldMap.SetTile(loc, tilegroups[tileGroup].tileSEIn);
             }
             else if (isWater[4] && isWater[7] && isWater[6])
             {
-                world.mapTiles[locX, locY].tile = world.mapTiles[locX, locY].biomeData.tileSW;
+                worldMap.SetTile(loc, tilegroups[tileGroup].tileSW);
             }
             else if (isWater[7] && waterLocs.Count == 1)
             {
-                world.mapTiles[locX, locY].tile = world.mapTiles[locX, locY].biomeData.tileSWIn;
+                worldMap.SetTile(loc, tilegroups[tileGroup].tileSWIn);
             }
 
         }
 
     }
-public static void SpriteMapFromTileData(WorldMap world, Color[] colourMap, int size, Tilemap worldMap, Tile coastWater, Tilemap waterMap, Tilemap treeMap, Tilemap mountMap)
+    public static void SpriteMapFromTileData(WorldMap world, Color[] colourMap, int size, Tilemap worldMap, Tile coastWater, Tilemap waterMap, Tilemap treeMap, Tilemap mountMap, tileGroup[] tilegroups, Dictionary<int, Biome> biomesList)
     {
-        
+
         for (int y = 0; y < size; y++)
         {
             for (int x = 0; x < size; x++)
             {
                 Vector3Int location = new Vector3Int(x, y, 0);
-                if (world.mapTiles[x,y].BiomeType == 0)
+                int tileGroup = getTilegroup(world.mapTiles[x, y], biomesList, tilegroups);
+                if (world.mapTiles[x, y].BiomeType == 0)
                 {
-                    waterMap.SetTile(location, world.mapTiles[x, y].tile);
+                    waterMap.SetTile(location, tilegroups[tileGroup].tileC);
                 }
-                else if(world.mapTiles[x, y].BiomeType == 1)
+                else if (world.mapTiles[x, y].BiomeType == 1)
                 {
-                    mountMap.SetTile(location, world.mapTiles[x, y].tile);
+                    mountMap.SetTile(location, tilegroups[tileGroup].tileC);
                 }
-                else if(world.mapTiles[x, y].BiomeType == 2)
+                else if (world.mapTiles[x, y].BiomeType == 2)
                 {
-                    coastGeneration(world, x, y, size,coastWater, waterMap);
-                    worldMap.SetTile(location, world.mapTiles[x, y].tile);
+                    coastGeneration(world, x, y, size, coastWater, waterMap, tilegroups, biomesList, worldMap);
                 }
-                else if(world.mapTiles[x, y].BiomeType == 3)
+                else if (world.mapTiles[x, y].BiomeType == 3)
                 {
-                    treeMap.SetTile(location, world.mapTiles[x, y].tile);
+                    treeMap.SetTile(location, tilegroups[tileGroup].tileC);
                 }
                 //worldMap.SetTile(location, world.mapTiles[x, y].tile);
                 //worldMap.SetColor(location, colourMap[y * size + x]);
             }
         }
     }
+
+    public static int getTilegroup(MapTile currentTile, Dictionary<int, Biome> biomes, tileGroup[] tileGroups)
+    {
+        int tileGroup = 0;
+        for (int j = 0; j < tileGroups.Length; j++)
+        {
+            if (biomes[currentTile.biomeId].tileGroupName == tileGroups[j].groupName)
+            {
+                tileGroup = j;
+                break;
+            }
+        }
+
+        return tileGroup;
+    }
+
 }

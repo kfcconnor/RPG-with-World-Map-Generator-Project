@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -38,6 +39,8 @@ public class MapGenerator : MonoBehaviour
     public float maxHeat2;
     public float minHeat2 = 1000;
 
+    public int numOfNations;
+
     public int MaxDistance;
     public int offsetZ;
 
@@ -55,18 +58,21 @@ public class MapGenerator : MonoBehaviour
     public Tile coastWater;
     public Tile town;
 
+    public disallowedTerains[] checkTerrains;
     public TerrainType[] regions;
     public SeaTerrains[] seaTerrains;
     public MountTerrains[] mountTerrains;
     public HeatTerrains[] heatTerrains;
     public rainTerrains[] rainTerrains;
-    public BiomeRow[] biomeRows;
+    public tileGroup[] tileGroups;
+    public BiomeDic biomes;
 
     float[,] falloffMap;
 
     void Awake()
     {
         falloffMap = FalloffGenerator.GeneratorFalloffMap(size);
+        
         GenerateMap();
         
     }
@@ -78,8 +84,9 @@ public class MapGenerator : MonoBehaviour
         waterMap.ClearAllTiles();
         treeMap.ClearAllTiles();
         mountMap.ClearAllTiles();
+        populateBiomes();
         worldMapMan.worldMap.mapTiles = new MapTile[size, size];
-        worldMapMan.Debug = new Town[worldMapMan.NumNations];
+        //worldMapMan.Debug = new Town[worldMapMan.NumNations];
         captialGen capGen = new captialGen();
         worldMapMan.size = size;
         System.Random resources = new System.Random(seed);
@@ -92,6 +99,7 @@ public class MapGenerator : MonoBehaviour
         float[,] randomHeatMap = Noise.GenerateNoiseMap(size, seed, heatScale, octaves, persistance, lanunarity, heatOffset);
         float[,] heatMap = new float[size, size];
         Color[] colourMap = new Color[size * size];
+        //bool tilefound = false;
 
         for (int y = 0; y < size; y++)
         {
@@ -127,6 +135,8 @@ public class MapGenerator : MonoBehaviour
                 }
             }
         }
+
+
         int tilNo = 0;
      for (int y = 0; y < size; y++)
         {
@@ -139,7 +149,7 @@ public class MapGenerator : MonoBehaviour
                 float currentHeight = noiseMap[x, y];
                 float currentRain = rainMap[x, y];
                 float currentHeat = heatMap[x, y];
-                int Heat = 0;
+                Vector2 tileCond = new Vector2();
                 string Rain = "";
 
                 if (currentRain > maxRain)
@@ -160,7 +170,7 @@ public class MapGenerator : MonoBehaviour
                 }
 
                 int terrainType = 0;
-                worldMapMan.worldMap.mapTiles[x, y].oreTypes = new List<ore>();
+                //worldMapMan.worldMap.mapTiles[x, y].oreTypes = new List<ore>();
                 if (currentHeight <= seaLevel)
                 {
                     terrainType = 0;
@@ -177,57 +187,29 @@ public class MapGenerator : MonoBehaviour
                 {
                     case 0:
                         {
-                            for (int i = 0; i < seaTerrains.Length; i++)
-                            {
-                                if(currentHeight <= seaTerrains[i].height)
-                                {
-                                    colourMap[y * size + x] = seaTerrains[i].colour;
-                                    worldMapMan.worldMap.mapTiles[x, y].coord.x = x;
-                                    worldMapMan.worldMap.mapTiles[x, y].coord.y = y;
-                                    worldMapMan.worldMap.mapTiles[x, y].Biome = seaTerrains[i].name;
-                                    worldMapMan.worldMap.mapTiles[x, y].tile = seaTerrains[i].tile;
-                                    worldMapMan.worldMap.mapTiles[x, y].Food = resources.Next(0, 10) + seaTerrains[i].FoodMod;
-                                    worldMapMan.worldMap.mapTiles[x, y].Stone = resources.Next(0, 10) + seaTerrains[i].StoneMod;
-                                    worldMapMan.worldMap.mapTiles[x, y].Wood = resources.Next(0, 10) + seaTerrains[i].WoodMod;
-                                    worldMapMan.worldMap.mapTiles[x, y].Ore = 0;
-                                    worldMapMan.worldMap.mapTiles[x, y].BiomeType = 0;
-                                    //worldMapMan.worldMap.Debug[y * size + x] = worldMapMan.worldMap.mapTiles[x, y];
-                                    //worldMap.SetTile(location, seaTerrains[i].tile);
-                                    break;
-                                }
-                            }
-                                break;
+                            worldMapMan.worldMap.mapTiles[x,y].biomeId = getBiomeID(biomes.biomeData, terrainType, true, currentHeight, tileCond);
+                            worldMapMan.worldMap.mapTiles[x, y] = mapTile(worldMapMan.worldMap.mapTiles[x, y], biomes.biomeData, x, y, resources);
+                            colourMap[y * size + x] = biomes.biomeData[worldMapMan.worldMap.mapTiles[x, y].biomeId].color;
+                            break;
                         }
                     case 1:
                         {
-                            for (int i = 0; i < mountTerrains.Length; i++)
-                            {
-                                if (currentHeight <= mountTerrains[i].height)
-                                {
-                                    colourMap[y * size + x] = mountTerrains[i].colour;
-                                    worldMapMan.worldMap.mapTiles[x, y].coord.x = x;
-                                    worldMapMan.worldMap.mapTiles[x, y].coord.y = y;
-                                    worldMapMan.worldMap.mapTiles[x, y].Biome = mountTerrains[i].name;
-                                    worldMapMan.worldMap.mapTiles[x, y].tile = mountTerrains[i].tile;
-                                    worldMapMan.worldMap.mapTiles[x, y].Food = resources.Next(0, 10) + mountTerrains[i].FoodMod;
-                                    worldMapMan.worldMap.mapTiles[x, y].Stone = resources.Next(0, 10) + mountTerrains[i].StoneMod;
-                                    worldMapMan.worldMap.mapTiles[x, y].Wood = resources.Next(0, 10) + mountTerrains[i].WoodMod;
-                                    worldMapMan.worldMap.mapTiles[x, y].Ore = resources.Next(0, 10) + mountTerrains[i].OreMod;
-                                    worldMapMan.worldMap.mapTiles[x, y].BiomeType = 1;
-                                    System.Random oreChance = new System.Random();
-                                    foreach (ore o in metalMan.OreList)
-                                    {
-                                        int typeChance = (resources.Next(0, 100));
-                                        if (typeChance < o.rarity*100)
-                                        {
-                                            worldMapMan.worldMap.mapTiles[x, y].oreTypes.Add(o);
-                                        }
-                                    }
-                                    //worldMapMan.worldMap.Debug[y * size + x] = worldMapMan.worldMap.mapTiles[x, y];
-                                    //worldMap.SetTile(location, mountTerrains[i].tile);
-                                    break;
-                                }
-                            }
+
+                            worldMapMan.worldMap.mapTiles[x, y].biomeId = getBiomeID(biomes.biomeData, terrainType, true, currentHeight, tileCond);
+                            worldMapMan.worldMap.mapTiles[x, y] = mapTile(worldMapMan.worldMap.mapTiles[x, y], biomes.biomeData, x, y, resources);
+                            colourMap[y * size + x] = biomes.biomeData[worldMapMan.worldMap.mapTiles[x, y].biomeId].color;
+                            //System.Random oreChance = new System.Random();
+                            //foreach (ore o in metalMan.OreList)
+                            //{
+                            //    int typeChance = (resources.Next(0, 100));
+                            //    if (typeChance < o.rarity*100)
+                            //    {
+                            //        worldMapMan.worldMap.mapTiles[x, y].oreTypes.Add(o);
+                            //    }
+                            //}
+                            //worldMapMan.worldMap.Debug[y * size + x] = worldMapMan.worldMap.mapTiles[x, y];
+                            //worldMap.SetTile(location, mountTerrains[i].tile);
+                            //break;
                             break;
                         }
                     case 2:
@@ -237,7 +219,7 @@ public class MapGenerator : MonoBehaviour
                             {
                                 if (currentHeat <= heatTerrains[i].height)
                                 {
-                                    Heat = heatTerrains[i].index;
+                                    tileCond.y = heatTerrains[i].index;
                                     break;
                                 }
                             }
@@ -253,80 +235,47 @@ public class MapGenerator : MonoBehaviour
                             {
                                 case "Dryest":
                                     {
-                                        colourMap[y * size + x] = biomeRows[0].biomes[Heat].color;
-                                        if (biomeRows[0].biomes[Heat].forest)
-                                        {
-                                            worldMapMan.worldMap.mapTiles[x, y].BiomeType = 3;
-                                        }
-                                        worldMapMan.worldMap.mapTiles[x, y].coord.x = x;
-                                        worldMapMan.worldMap.mapTiles[x, y].coord.y = y;
-                                        worldMapMan.worldMap.mapTiles[x, y].Biome = biomeRows[0].biomes[Heat].name;
-                                        worldMapMan.worldMap.mapTiles[x, y].biomeData = biomeRows[0].biomes[Heat];
-                                        worldMapMan.worldMap.mapTiles[x, y].tile = biomeRows[0].biomes[Heat].tileC;
-                                        worldMapMan.worldMap.mapTiles[x, y].Food = resources.Next(0, 10) + biomeRows[0].biomes[Heat].FoodMod;
-                                        worldMapMan.worldMap.mapTiles[x, y].Stone = resources.Next(0, 10) + biomeRows[0].biomes[Heat].StoneMod;
-                                        worldMapMan.worldMap.mapTiles[x, y].Wood = resources.Next(0, 10) + biomeRows[0].biomes[Heat].WoodMod;
-                                        worldMapMan.worldMap.mapTiles[x, y].Ore = 0;
+                                        tileCond.x = 0;
+
+                                        worldMapMan.worldMap.mapTiles[x, y].biomeId = getBiomeID(biomes.biomeData, terrainType, false, 0, tileCond);
+
+                                        worldMapMan.worldMap.mapTiles[x, y] = mapTile(worldMapMan.worldMap.mapTiles[x, y], biomes.biomeData, x, y, resources);
+                                        colourMap[y * size + x] = biomes.biomeData[worldMapMan.worldMap.mapTiles[x,y].biomeId].color;
                                         //worldMapMan.worldMap.Debug[y * size + x] = worldMapMan.worldMap.mapTiles[x, y];
                                         //worldMap.SetTile(location, biomeRows[0].biomes[Heat].tile);
                                         break;
                                     }
                                 case "Dry":
                                     {
-                                        colourMap[y * size + x] = biomeRows[1].biomes[Heat].color;
-                                        if (biomeRows[1].biomes[Heat].forest)
-                                        {
-                                            worldMapMan.worldMap.mapTiles[x, y].BiomeType = 3;
-                                        }
-                                        worldMapMan.worldMap.mapTiles[x, y].coord.x = x;
-                                        worldMapMan.worldMap.mapTiles[x, y].coord.y = y;
-                                        worldMapMan.worldMap.mapTiles[x, y].Biome = biomeRows[1].biomes[Heat].name;
-                                        worldMapMan.worldMap.mapTiles[x, y].biomeData = biomeRows[0].biomes[Heat];
-                                        worldMapMan.worldMap.mapTiles[x, y].tile = biomeRows[1].biomes[Heat].tileC;
-                                        worldMapMan.worldMap.mapTiles[x, y].Food = resources.Next(0, 10) + biomeRows[1].biomes[Heat].FoodMod;
-                                        worldMapMan.worldMap.mapTiles[x, y].Stone = resources.Next(0, 10) + biomeRows[1].biomes[Heat].StoneMod;
-                                        worldMapMan.worldMap.mapTiles[x, y].Wood = resources.Next(0, 10) + biomeRows[1].biomes[Heat].WoodMod;
-                                        worldMapMan.worldMap.mapTiles[x, y].Ore = 0;
+                                        tileCond.x = 1;
+                                        //colourMap[y * size + x] = biomeRows[1].biomes[Heat].color;
+                                        worldMapMan.worldMap.mapTiles[x, y].biomeId = getBiomeID(biomes.biomeData, terrainType, false, 0, tileCond);
+                                        worldMapMan.worldMap.mapTiles[x, y] = mapTile(worldMapMan.worldMap.mapTiles[x, y], biomes.biomeData, x, y, resources);
+                                        colourMap[y * size + x] = biomes.biomeData[worldMapMan.worldMap.mapTiles[x, y].biomeId].color;
                                         //worldMapMan.worldMap.Debug[y * size + x] = worldMapMan.worldMap.mapTiles[x, y];
                                         //worldMap.SetTile(location, biomeRows[1].biomes[Heat].tile);
                                         break;
                                     }
                                 case "Wet":
                                     {
-                                        colourMap[y * size + x] = biomeRows[2].biomes[Heat].color;
-                                        if (biomeRows[2].biomes[Heat].forest)
-                                        {
-                                            worldMapMan.worldMap.mapTiles[x, y].BiomeType = 3;
-                                        }
-                                        worldMapMan.worldMap.mapTiles[x, y].coord.x = x;
-                                        worldMapMan.worldMap.mapTiles[x, y].coord.y = y;
-                                        worldMapMan.worldMap.mapTiles[x, y].Biome = biomeRows[2].biomes[Heat].name;
-                                        worldMapMan.worldMap.mapTiles[x, y].biomeData = biomeRows[0].biomes[Heat];
-                                        worldMapMan.worldMap.mapTiles[x, y].tile = biomeRows[2].biomes[Heat].tileC;
-                                        worldMapMan.worldMap.mapTiles[x, y].Food = resources.Next(0, 10) + biomeRows[2].biomes[Heat].FoodMod;
-                                        worldMapMan.worldMap.mapTiles[x, y].Stone = resources.Next(0, 10) + biomeRows[2].biomes[Heat].StoneMod;
-                                        worldMapMan.worldMap.mapTiles[x, y].Wood = resources.Next(0, 10) + biomeRows[2].biomes[Heat].WoodMod;
-                                        worldMapMan.worldMap.mapTiles[x, y].Ore = 0;
+                                        tileCond.x = 2;
+                                        //colourMap[y * size + x] = biomeRows[2].biomes[Heat].color;
+                                        worldMapMan.worldMap.mapTiles[x, y].biomeId = getBiomeID(biomes.biomeData, terrainType, false, 0, tileCond);
+
+                                        worldMapMan.worldMap.mapTiles[x, y] = mapTile(worldMapMan.worldMap.mapTiles[x, y], biomes.biomeData, x, y, resources);
+                                        colourMap[y * size + x] = biomes.biomeData[worldMapMan.worldMap.mapTiles[x, y].biomeId].color;
                                         //worldMapMan.worldMap.Debug[y * size + x] = worldMapMan.worldMap.mapTiles[x, y];
                                         //worldMap.SetTile(location, biomeRows[2].biomes[Heat].tile);
                                         break;
                                     }
                                 case "Wettest":
                                     {
-                                        colourMap[y * size + x] = biomeRows[3].biomes[Heat].color;
-                                        if (biomeRows[3].biomes[Heat].forest)
-                                        {
-                                            worldMapMan.worldMap.mapTiles[x, y].BiomeType = 3;
-                                        }
-                                        worldMapMan.worldMap.mapTiles[x, y].coord.x = x;
-                                        worldMapMan.worldMap.mapTiles[x, y].coord.y = y;
-                                        worldMapMan.worldMap.mapTiles[x, y].Biome = biomeRows[3].biomes[Heat].name;
-                                        worldMapMan.worldMap.mapTiles[x, y].biomeData = biomeRows[0].biomes[Heat];
-                                        worldMapMan.worldMap.mapTiles[x, y].tile = biomeRows[3].biomes[Heat].tileC;
-                                        worldMapMan.worldMap.mapTiles[x, y].Food = resources.Next(0, 10) + biomeRows[3].biomes[Heat].FoodMod;
-                                        worldMapMan.worldMap.mapTiles[x, y].Stone = resources.Next(0, 10) + biomeRows[3].biomes[Heat].StoneMod;
-                                        worldMapMan.worldMap.mapTiles[x, y].Wood = resources.Next(0, 10) + biomeRows[3].biomes[Heat].WoodMod;
-                                        worldMapMan.worldMap.mapTiles[x, y].Ore = 0;
+                                        tileCond.x = 3;
+                                        //colourMap[y * size + x] = biomeRows[3].biomes[Heat].color;
+                                        worldMapMan.worldMap.mapTiles[x, y].biomeId = getBiomeID(biomes.biomeData, terrainType, false, 0, tileCond);
+
+                                        worldMapMan.worldMap.mapTiles[x, y] = mapTile(worldMapMan.worldMap.mapTiles[x, y], biomes.biomeData, x, y, resources);
+                                        colourMap[y * size + x] = biomes.biomeData[worldMapMan.worldMap.mapTiles[x, y].biomeId].color;
                                         //worldMapMan.worldMap.Debug[y * size + x] = worldMapMan.worldMap.mapTiles[x, y];
                                         //worldMap.SetTile(location, biomeRows[3].biomes[Heat].tile);
                                         break;
@@ -340,7 +289,11 @@ public class MapGenerator : MonoBehaviour
             }
             
         }
-        capGen.captialPos(worldMapMan, size, worldMapMan.NumNations, TownMap, town);
+
+        //mapClean(worldMapMan, size, colourMap);
+
+        worldMapMan.nationSetup(numOfNations);
+        capGen.captialPos(worldMapMan, size, numOfNations, TownMap, town);
         MapDisplay display = FindObjectOfType<MapDisplay> ();
         if (drawMode == DrawMode.noiseMap)
         {
@@ -397,8 +350,181 @@ public class MapGenerator : MonoBehaviour
         }
         else if (drawMode == DrawMode.tileMap)
         {
-            TextureGenerator.SpriteMapFromTileData(worldMapMan.worldMap, colourMap, size, worldMap, coastWater, waterMap, treeMap, mountMap);
+            TextureGenerator.SpriteMapFromTileData(worldMapMan.worldMap, colourMap, size, worldMap, coastWater, waterMap, treeMap, mountMap, tileGroups, biomes.biomeData);
         }
+        //tileCheck(worldMapMan, size, 0, 0);
+        //tileCheck(worldMapMan, size, 150, 150);
+        //tileCheck(worldMapMan, size, 50, 100);
+        //Debug.Log(Directory.GetCurrentDirectory());
+        //worldMapMan.saveMap(size);
+    }
+
+    public MapTile mapTile(MapTile currentTile, Dictionary<int, Biome> biomes , int x, int y, System.Random resources)
+    {
+        currentTile.coord.x = x;
+        currentTile.coord.y = y;
+        currentTile.Biome = biomes[currentTile.biomeId].name;
+        currentTile.ownerID = 0;
+        currentTile.BiomeType = biomes[currentTile.biomeId].biomeType;
+        currentTile.lifeScore = resources.Next(0, 50) * biomes[currentTile.biomeId].lifeMod;
+        currentTile.Ore = 0;
+        return currentTile;
+    }
+
+
+    public int getBiomeID(Dictionary<int, Biome> biomes, int biomeType, bool Height,float hValue, Vector2 tileCond)
+    {
+        int biomeID = 0;
+        bool tilefound = false;
+
+        if (Height)
+        {
+            for (int i = 0; i < biomes.Count; i++)
+            {
+                if(biomeType == 0)
+                {
+                    if (biomeType == biomes[i].biomeType && biomes[i].tag == "Water")
+                    {
+                        if (hValue < biomes[i].maxHeight)
+                        {
+                            biomeID = i;
+                            break;
+                        }
+                    }
+                }
+                else if (biomeType == 1)
+                {
+                    if (biomeType == biomes[i].biomeType && biomes[i].tag == "Mount")
+                    {
+                        if (hValue < biomes[i].maxHeight)
+                        {
+                            biomeID = i;
+                            break;
+                        }
+                    }
+                }
+                
+            }
+        }
+        else
+        {
+            for (int i = 0; i < biomes.Count; i++)
+            {
+                foreach (Vector2 c in biomes[i].conditions)
+                {
+                    if (tileCond == c)
+                    {
+                        biomeID = i;
+                        tilefound = true;
+                        break;
+                    }
+                }
+
+                if (tilefound)
+                {
+                    tilefound = false;
+                    break;
+                }
+            }
+        }
+
+        return biomeID;
+    }
+
+    //public void mapClean(WorldMapManager worldMan, int size, Color[] colourMap)
+    //{
+
+    //    int checkSize = checkTerrains.Length;
+    //    int xCount = 0;
+    //    int yCount = 2;
+    //    List<int[,]> dTerrains = new List<int[,]>();
+    //    int[,] currentDTerrain = new int[3, 3];
+    //    for (int i = 0; i < checkSize; i++)
+    //    {
+    //        foreach(int j in checkTerrains[i].terrainMap)
+    //        {
+    //            if (xCount == 3)
+    //            {
+    //                yCount--;
+    //                xCount = 0;
+    //            }
+
+    //            currentDTerrain[xCount, yCount] = j;
+
+    //        }
+    //        dTerrains.Add(currentDTerrain);
+    //        currentDTerrain = new int[3, 3];
+    //    }
+
+    //    for (int y = 0; y < size; y++)
+    //    {
+    //        for (int x = 0; x < size; x++)
+    //        {
+    //            if (worldMan.worldMap.mapTiles[x, y].BiomeType == 0)
+    //            {
+    //                continue;
+    //            }
+    //            else
+    //            {
+    //                int[,] currentCheck = tileCheck(worldMan, size, x, y);
+    //                foreach(int[,] check in dTerrains)
+    //                {
+    //                    if(currentCheck == check)
+    //                    {
+    //                        worldMan.worldMap.mapTiles[x, y].toClean = true;
+    //                    }
+    //                }
+    //            }
+
+    //        }
+    //    }
+
+    //    for (int y = 0; y < size; y++)
+    //    {
+    //        for (int x = 0; x < size; x++)
+    //        {
+    //            if (worldMan.worldMap.mapTiles[x, y].toClean)
+    //            {
+    //                colourMap[y * size + x] = seaTerrains[0].colour;
+    //                worldMan.worldMap.mapTiles[x, y].BiomeType = 0;
+    //                worldMapMan.worldMap.mapTiles[x, y].Biome = seaTerrains[0].name;
+    //                worldMapMan.worldMap.mapTiles[x, y].tile = seaTerrains[0].tile;
+    //            }
+
+    //        }
+    //    }
+    //}
+
+    public int[,] tileCheck(WorldMapManager worldMan, int size, int tileX, int tileY)
+    {
+        int[,] surroundingTileTypes = new int[3,3];
+        int xCount = 0;
+        int yCount = 2;
+
+
+        for (int i = tileY + 1; i >= tileY - 1; i--)
+        {
+            for (int j = tileX - 1; j <=tileX + 1; j++)
+            {
+                if (i < 0 || i >= size || j < 0 || j >=size)
+                {
+                    surroundingTileTypes[xCount, yCount] = 3;
+                }
+                else if(worldMan.worldMap.mapTiles[i,j].BiomeType == 0)
+                {
+                    surroundingTileTypes[xCount, yCount] = 0;
+                }
+                else if(worldMan.worldMap.mapTiles[i, j].BiomeType == 1 || worldMan.worldMap.mapTiles[i, j].BiomeType == 2)
+                {
+                    surroundingTileTypes[xCount, yCount] = 1;
+                }
+
+                xCount++;
+            }
+            xCount = 0;
+            yCount--;
+        }
+        return surroundingTileTypes;
     }
 
     public class captialGen
@@ -419,7 +545,7 @@ public class MapGenerator : MonoBehaviour
                     for (int x = 0; x < size; x++)
                     {
                         bool tooClose = false;
-                        if (worldMan.worldMap.mapTiles[x, y].Biome == "Water Shallow" || worldMan.worldMap.mapTiles[x, y].Biome == "Water Deep" || worldMan.worldMap.mapTiles[x, y].Biome == "Snow" || worldMan.worldMap.mapTiles[x, y].town)
+                        if (worldMan.worldMap.mapTiles[x, y].BiomeType == 0 || worldMan.worldMap.mapTiles[x, y].BiomeType == 1 || worldMan.worldMap.mapTiles[x, y].town)
                         {
                             continue;
                         }
@@ -436,10 +562,7 @@ public class MapGenerator : MonoBehaviour
                         {
                             continue;
                         }
-                        float LocalFood = worldMan.worldMap.mapTiles[x, y].Food + worldMan.worldMap.mapTiles[x + 1, y].Food + worldMan.worldMap.mapTiles[x - 1, y].Food + worldMan.worldMap.mapTiles[x, y + 1].Food + worldMan.worldMap.mapTiles[x, y - 1].Food;
-                        float LocalWood = worldMan.worldMap.mapTiles[x, y].Wood + worldMan.worldMap.mapTiles[x + 1, y].Wood + worldMan.worldMap.mapTiles[x - 1, y].Wood + worldMan.worldMap.mapTiles[x, y + 1].Wood + worldMan.worldMap.mapTiles[x, y - 1].Wood;
-                        float LocalLife = (LocalFood * 2) + (LocalWood / 2);
-                        worldMan.worldMap.mapTiles[x, y].lifeScore = LocalLife;
+                        float LocalLife = worldMan.worldMap.mapTiles[x, y].lifeScore;
                         if (LocalLife >= bestLife)
                         {
                             bestTile.x = x;
@@ -451,12 +574,207 @@ public class MapGenerator : MonoBehaviour
                 townLocs[i] = bestTile;
                 Vector3Int townPos = new Vector3Int(bestTile.x, bestTile.y, 0);
                 townMap.SetTile(townPos, town);
-                worldMan.CreateTown(bestTile.x, bestTile.y, i.ToString(), 2, true);
+                worldMan.addTown(i + 1, true, 0, bestTile.x, bestTile.y);
+                //worldMan.CreateTown(bestTile.x, bestTile.y, i.ToString(), 2, true);
                 bestLife = 0;
             }
             
         }
     }
+
+    public void populateBiomes()
+    {
+        int id = 0;
+
+        biomes.biomeData = new Dictionary<int, Biome>();
+        Vector2 cond = new Vector2();
+        Biome currentBiome = new Biome();
+        currentBiome.conditions = new List<Vector2>();
+        currentBiome.name = "Desert";
+        currentBiome.color.r = 207f / 255f;
+        currentBiome.color.g = 209f / 255f;
+        currentBiome.color.b = 125f / 255f;
+        currentBiome.biomeType = 2;
+        currentBiome.lifeMod = 0.75f;
+        currentBiome.tileGroupName = "Desert";
+        currentBiome.forest = false;
+        cond = new Vector2(0, 0);
+        currentBiome.conditions.Add(cond);
+        biomes.biomeData.Add(id, currentBiome);
+        id++;
+
+        currentBiome = new Biome();
+        currentBiome.conditions = new List<Vector2>();
+        currentBiome.name = "Grassland";
+        currentBiome.color.r = 88f / 255f;
+        currentBiome.color.g = 151f / 255f;
+        currentBiome.color.b = 22f / 255f;
+        currentBiome.biomeType = 2;
+        currentBiome.lifeMod = 1f;
+        currentBiome.tileGroupName = "Grassland";
+        currentBiome.forest = false;
+        cond = new Vector2(0, 1);
+        currentBiome.conditions.Add(cond);
+        biomes.biomeData.Add(id, currentBiome);
+        id++;
+
+        currentBiome = new Biome();
+        currentBiome.conditions = new List<Vector2>();
+        currentBiome.name = "Tundra";
+        currentBiome.color.r = 217f / 255f;
+        currentBiome.color.g = 189f / 255f;
+        currentBiome.color.b = 189f / 255f;
+        currentBiome.biomeType = 2;
+        currentBiome.lifeMod = 0.75f;
+        currentBiome.tileGroupName = "Tundra";
+        currentBiome.heightBiome = false;
+        cond = new Vector2(0, 2);
+        currentBiome.conditions.Add(cond);
+        cond = new Vector2(0, 3);
+        currentBiome.conditions.Add(cond);
+        cond = new Vector2(1, 3);
+        currentBiome.conditions.Add(cond);
+        cond = new Vector2(2, 3);
+        currentBiome.conditions.Add(cond);
+        cond = new Vector2(3, 2);
+        currentBiome.conditions.Add(cond);
+        cond = new Vector2(3, 3);
+        currentBiome.conditions.Add(cond);
+        biomes.biomeData.Add(id, currentBiome);
+        id++;
+
+        currentBiome = new Biome();
+        currentBiome.conditions = new List<Vector2>();
+        currentBiome.name = "Savanna";
+        currentBiome.color.r = 173f / 255f;
+        currentBiome.color.g = 217f / 255f;
+        currentBiome.color.b = 119f / 255f;
+        currentBiome.lifeMod = 1.25f;
+        currentBiome.biomeType = 2;
+        currentBiome.tileGroupName = "Grassland";
+        currentBiome.heightBiome = false;
+        cond = new Vector2(1, 0);
+        currentBiome.conditions.Add(cond);
+        cond = new Vector2(1, 1);
+        currentBiome.conditions.Add(cond);
+        biomes.biomeData.Add(id, currentBiome);
+        id++;
+
+        currentBiome = new Biome();
+        currentBiome.conditions = new List<Vector2>();
+        currentBiome.name = "Boreal Forest";
+        currentBiome.color.r = 57f / 255f;
+        currentBiome.color.g = 89f / 255f;
+        currentBiome.color.b = 25f / 255f;
+        currentBiome.biomeType = 3;
+        currentBiome.lifeMod = 1.1f;
+        currentBiome.tileGroupName = "Boreal Forest";
+        currentBiome.heightBiome = false;
+        cond = new Vector2(1, 2);
+        currentBiome.conditions.Add(cond);
+        cond = new Vector2(2, 1);
+        currentBiome.conditions.Add(cond);
+        cond = new Vector2(2, 2);
+        currentBiome.conditions.Add(cond);
+        biomes.biomeData.Add(id, currentBiome);
+        id++;
+
+        currentBiome = new Biome();
+        currentBiome.conditions = new List<Vector2>();
+        currentBiome.name = "Tropical Rainforest";
+        currentBiome.color.r = 32f/255f;
+        currentBiome.color.g = 173f / 255f;
+        currentBiome.color.b = 17f / 255f;
+        currentBiome.biomeType = 3;
+        currentBiome.lifeMod = 0.75f;
+        currentBiome.tileGroupName = "Tropical Rainforest";
+        currentBiome.heightBiome = false;
+        cond = new Vector2(2, 0);
+        currentBiome.conditions.Add(cond);
+        cond = new Vector2(3, 0);
+        currentBiome.conditions.Add(cond);
+        cond = new Vector2(3, 1);
+        currentBiome.conditions.Add(cond);
+        biomes.biomeData.Add(id, currentBiome);
+        id++;
+
+        currentBiome = new Biome();
+        currentBiome.conditions = new List<Vector2>();
+        currentBiome.name = "Water Deep";
+        currentBiome.tag = "Water";
+        currentBiome.color.r = 52f / 255f;
+        currentBiome.color.g = 98f / 255f;
+        currentBiome.color.b = 194f / 255f;
+        currentBiome.biomeType = 0;
+        currentBiome.lifeMod = 0f;
+        currentBiome.tileGroupName = "Water";
+        currentBiome.forest = true;
+        currentBiome.maxHeight = 0.4f;
+        currentBiome.conditions.Add(cond);
+        biomes.biomeData.Add(id, currentBiome);
+        id++;
+
+        currentBiome = new Biome();
+        currentBiome.conditions = new List<Vector2>();
+        currentBiome.name = "Water Shallow";
+        currentBiome.tag = "Water";
+        currentBiome.color.r = 100f / 255f;
+        currentBiome.color.g = 100f / 255f;
+        currentBiome.color.b = 255f / 255f;
+        currentBiome.biomeType = 0;
+        currentBiome.lifeMod = 0f;
+        currentBiome.tileGroupName = "Water";
+        currentBiome.forest = true;
+        currentBiome.maxHeight = 0.7f;
+        biomes.biomeData.Add(id, currentBiome);
+        id++;
+
+        currentBiome = new Biome();
+        currentBiome.conditions = new List<Vector2>();
+        currentBiome.name = "Rock 1";
+        currentBiome.tag = "Mount";
+        currentBiome.color.r = 91f / 255f;
+        currentBiome.color.g = 68f / 255f;
+        currentBiome.color.b = 61f / 255f;
+        currentBiome.biomeType = 1;
+        currentBiome.lifeMod = 0f;
+        currentBiome.tileGroupName = "Hills";
+        currentBiome.forest = true;
+        currentBiome.maxHeight = 0.8f;
+        biomes.biomeData.Add(id, currentBiome);
+        id++;
+
+        currentBiome = new Biome();
+        currentBiome.conditions = new List<Vector2>();
+        currentBiome.name = "Rock 2";
+        currentBiome.tag = "Mount";
+        currentBiome.color.r = 65f / 255f;
+        currentBiome.color.g = 50f / 255f;
+        currentBiome.color.b = 50f / 255f;
+        currentBiome.biomeType = 1;
+        currentBiome.lifeMod = 0f;
+        currentBiome.tileGroupName = "Mountain_1";
+        currentBiome.forest = true;
+        currentBiome.maxHeight = 0.9f;
+        biomes.biomeData.Add(id, currentBiome);
+        id++;
+
+        currentBiome = new Biome();
+        currentBiome.conditions = new List<Vector2>();
+        currentBiome.name = "Snow";
+        currentBiome.tag = "Mount";
+        currentBiome.color.r = 255f / 255f;
+        currentBiome.color.g = 255f / 255f;
+        currentBiome.color.b = 255f / 255f;
+        currentBiome.biomeType = 1;
+        currentBiome.lifeMod = 0f;
+        currentBiome.tileGroupName = "Mountain_2";
+        currentBiome.forest = true;
+        currentBiome.maxHeight = 1f;
+        biomes.biomeData.Add(id, currentBiome);
+        id++;
+    }
+
     private void OnValidate()
     {
         falloffMap = FalloffGenerator.GeneratorFalloffMap(size);
@@ -473,6 +791,13 @@ public class MapGenerator : MonoBehaviour
             octaves = 0;
         }
     }
+}
+
+
+[System.Serializable]
+public struct disallowedTerains
+{
+    public int[] terrainMap;
 }
 
 [System.Serializable]
@@ -544,6 +869,27 @@ public struct Biome
 {
     public string name;
     public Color color;
+    public string tileGroupName;
+    public string tag;
+    public int biomeType;
+    public bool heightBiome;
+    public float maxHeight;
+    public bool forest;
+    public List<Vector2> conditions;
+    [Range(0, 2)]
+    public float lifeMod;
+}
+
+[System.Serializable]
+public struct BiomeDic
+{
+    public Dictionary<int, Biome> biomeData;
+}
+
+[System.Serializable]
+public struct tileGroup
+{
+    public string groupName;
     public Tile tileC;
     public Tile tileW;
     public Tile tileE;
@@ -557,21 +903,4 @@ public struct Biome
     public Tile tileSEIn;
     public Tile tileSW;
     public Tile tileSWIn;
-    public bool forest;
-    [Range(0, 5)]
-    public int FoodMod;
-    [Range(0, 5)]
-    public int TradeMod;
-    [Range(0, 5)]
-    public int StoneMod;
-    [Range(0, 5)]
-    public int WoodMod;
-    [Range(0, 5)]
-    public int OreMod;
-}
-
-[System.Serializable]
-public struct BiomeRow
-{
-    public Biome[] biomes;
 }
